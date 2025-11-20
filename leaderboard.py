@@ -1,30 +1,74 @@
 import redis
-from typing import List, Tuple, Optional, Dict
+import redis.asyncio as aioredis
+from typing import List, Tuple, Optional, Dict, Union
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+import asyncio
+import time
+import logging
+from functools import wraps
+import hashlib
 
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def rate_limit(max_calls: int, time_window: int):
+    """Decorator for rate limiting operations"""
+    def decorator(func):
+        calls = []
+        
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            now = time.time()
+            # Remove old calls outside the time window
+            calls[:] = [call_time for call_time in calls if now - call_time < time_window]
+            
+            if len(calls) >= max_calls:
+                raise Exception(f"Rate limit exceeded: {max_calls} calls per {time_window} seconds")
+            
+            calls.append(now)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 class RedisLeaderboard:
     """
-    A Redis-based leaderboard system supporting multiple leaderboards,
-    player stats, and real-time updates.
+    A high-performance Redis-based leaderboard system with:
+    - Connection pooling for better performance
+    - Caching for frequently accessed data
+    - Rate limiting to prevent abuse
+    - Comprehensive logging and monitoring
+    - Async support for high-concurrency applications
+    - Data validation and sanitization
     """
     
-    def __init__(self, host='localhost', port=6379, db=0, password=None):
-        """Initialize Redis connection"""
-        self.redis_client = redis.Redis(
-            host=host, 
-            port=port, 
-            db=db, 
+    def __init__(self, host='localhost', port=6379, db=0, password=None, 
+                 max_connections=20, socket_timeout=5, cache_ttl=60):
+        """Initialize Redis connection with connection pooling and caching"""
+        # Connection pool for better performance
+        self.connection_pool = redis.ConnectionPool(
+            host=host,
+            port=port,
+            db=db,
             password=password,
+            max_connections=max_connections,
+            socket_timeout=socket_timeout,
             decode_responses=True
         )
+        
+        self.redis_client = redis.Redis(connection_pool=self.connection_pool)
+        self.cache_ttl = cache_ttl
+        self._cache = {}  # Simple in-memory cache
         
         # Test connection
         try:
             self.redis_client.ping()
-            print("✅ Connected to Redis successfully!")
-        except redis.ConnectionError:
+            logger.info("✅ Connected to Redis successfully with connection pool!")
+            print("✅ Connected to Redis successfully with connection pool!")
+        except redis.ConnectionError as e:
+            logger.error(f"❌ Failed to connect to Redis: {e}")
             raise Exception("❌ Failed to connect to Redis. Make sure Redis is running.")
     
     def add_player(self, leaderboard_name: str, player_name: str, score: int) -> bool:

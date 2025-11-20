@@ -1,16 +1,35 @@
-# Redis Leaderboard
+# Redis Leaderboard Pro
 
-A fast, scalable Redis-powered leaderboard system with Python. Features both CLI and REST API interfaces.
+A high-performance, production-ready Redis-powered leaderboard system with advanced features for modern applications.
 
 ## 🚀 Features
 
-- **Real-time leaderboards** with Redis sorted sets
-- **High performance** - handles millions of players
-- **Multiple interfaces**: CLI, REST API, Python library
-- **Rich functionality**: rankings, score updates, player context
-- **Batch operations** for better performance
-- **Player metadata** storage and retrieval
-- **Score range queries** and statistics
+### Core Features
+- **Ultra-fast leaderboards** with Redis sorted sets
+- **High performance** - handles millions of players with connection pooling
+- **Multiple interfaces**: CLI, REST API, Python library, Async API
+- **Rich functionality**: rankings, score updates, player context, batch operations
+- **Real-time updates** with sub-millisecond response times
+
+### Advanced Features ✨
+- **Async Support** - High-concurrency async leaderboard for web APIs
+- **Historical Tracking** - Snapshots and timeline analysis
+- **Player Analytics** - Detailed statistics and activity tracking
+- **Monitoring & Alerting** - Real-time system monitoring with thresholds
+- **Performance Optimization** - Automatic memory management and slow query analysis
+- **Seasonal Leaderboards** - Time-based leaderboard management
+- **Rate Limiting** - Protection against abuse
+- **Caching Layer** - Improved response times for frequent queries
+- **Data Validation** - Input sanitization and error handling
+- **Comprehensive Testing** - Full test suite with performance benchmarks
+
+### Production Ready 🏭
+- **Connection Pooling** for optimal Redis performance
+- **Logging & Monitoring** with configurable alerts
+- **Environment Configuration** for dev/staging/production
+- **Docker Support** with multi-stage builds
+- **Security Features** including rate limiting and input validation
+- **Performance Analytics** and optimization recommendations
 
 ## 📋 Prerequisites
 
@@ -41,7 +60,7 @@ Or install individual packages:
 pip install redis fastapi uvicorn click python-dotenv
 ```
 
-## 🏃‍♂️ Quick Start
+## ⚡ Quick Start
 
 ### 1. Test Basic Connection
 
@@ -60,62 +79,141 @@ print(r.get("test"))  # Should print: b'Hello Redis!'
 python leaderboard.py
 ```
 
-This will demonstrate all leaderboard features with sample data.
-
-### 3. Use the CLI
+### 3. Try Advanced Features
 
 ```bash
-# Add players
-python cli.py add game_leaderboard Alice 1500
-python cli.py add game_leaderboard Bob 1200
+# Async demo
+python async_leaderboard.py
 
-# Show top players  
-python cli.py top game_leaderboard
+# Advanced analytics
+python advanced_features.py
 
-# Update scores
-python cli.py update game_leaderboard Alice 100
-
-# Get player rank
-python cli.py rank game_leaderboard Alice
+# System monitoring
+python monitoring.py
 ```
 
-### 4. Start the API Server
+### 4. Use the CLI
+
+```bash
+# Basic operations
+python cli.py add game_leaderboard Alice 1500
+python cli.py top game_leaderboard
+python cli.py demo
+```
+
+### 5. Start the API Server
 
 ```bash
 python api.py
+# Visit: http://localhost:8000/docs
 ```
-
-Visit `http://localhost:8000/docs` for interactive API documentation.
 
 ## 📚 Usage Examples
 
-### Python Library
+### Basic Python Library
 
 ```python
 from leaderboard import RedisLeaderboard
 
-# Initialize
-lb = RedisLeaderboard()
+# Initialize with connection pooling
+lb = RedisLeaderboard(max_connections=20, cache_ttl=60)
 
 # Add players
 lb.add_player("my_game", "Alice", 1500)
 lb.add_player("my_game", "Bob", 1200)
 
-# Update scores
-lb.update_score("my_game", "Alice", 100)  # +100 points
+# Batch operations for better performance
+players = {"Charlie": 1800, "Diana": 1600, "Eve": 1100}
+lb.batch_add_players("my_game", players)
 
-# Get top 10 players
+# Get top players with caching
 top_players = lb.get_top_players("my_game", 10)
 for rank, (player, score) in enumerate(top_players, 1):
     print(f"#{rank}: {player} - {score}")
+```
 
-# Get player rank
-rank = lb.get_player_rank("my_game", "Alice")
-print(f"Alice is rank #{rank}")
+### Async API (High Performance)
 
-# Batch add players
-players = {"Charlie": 1800, "Diana": 1600, "Eve": 1100}
-lb.batch_add_players("my_game", players)
+```python
+import asyncio
+from async_leaderboard import AsyncRedisLeaderboard
+
+async def high_performance_example():
+    lb = AsyncRedisLeaderboard(max_connections=50)
+    await lb.connect()
+    
+    # Concurrent operations
+    await asyncio.gather(
+        lb.add_player("game1", "Alice", 1500),
+        lb.add_player("game1", "Bob", 1200),
+        lb.update_score("game1", "Alice", 100)
+    )
+    
+    top_players = await lb.get_top_players("game1", 10)
+    await lb.close()
+    
+asyncio.run(high_performance_example())
+```
+
+### Advanced Analytics
+
+```python
+from advanced_features import AdvancedRedisLeaderboard, ScoreUpdateType
+import redis
+
+r = redis.Redis(decode_responses=True)
+advanced_lb = AdvancedRedisLeaderboard(r)
+
+# Create historical snapshots
+advanced_lb.create_snapshot("my_game", "End of tournament")
+
+# Track player activity for analytics
+advanced_lb.track_player_activity(
+    "my_game", "Alice", 250, ScoreUpdateType.INCREMENT
+)
+
+# Get detailed player statistics
+stats = advanced_lb.get_player_stats("my_game", "Alice")
+print(f"Games played: {stats.games_played}")
+print(f"Average score: {stats.average_score:.1f}")
+print(f"Highest score: {stats.highest_score}")
+
+# Get comprehensive leaderboard analytics
+analytics = advanced_lb.get_leaderboard_analytics("my_game")
+print(f"Total players: {analytics['total_players']}")
+print(f"Average score: {analytics['score_stats']['average']:.1f}")
+print(f"Score distribution: {analytics['distribution']['score_ranges']}")
+```
+
+### Real-time Monitoring
+
+```python
+from monitoring import RedisLeaderboardMonitor
+import redis
+
+r = redis.Redis(decode_responses=True)
+
+# Set up monitoring with custom thresholds
+thresholds = {
+    'memory_usage_mb': 500,
+    'cpu_usage_percent': 80,
+    'avg_response_time_ms': 100
+}
+
+monitor = RedisLeaderboardMonitor(r, thresholds)
+
+# Start real-time monitoring
+monitor.start_monitoring(interval_seconds=60)
+
+# Get current system status
+status = monitor.get_current_status()
+print(f"Status: {status['status']}")
+print(f"CPU Usage: {status['metrics']['cpu_usage']:.1f}%")
+print(f"Memory Usage: {status['metrics']['memory_usage']:.1f}%")
+
+# Get performance report
+report = monitor.get_performance_report(hours=24)
+print(f"Average response time: {report['averages']['response_time_ms']:.2f}ms")
 ```
 
 ### CLI Interface

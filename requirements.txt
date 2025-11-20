@@ -1,6 +1,25 @@
+# Core Redis and API dependencies
 redis==5.0.1
 fastapi==0.104.1
 uvicorn==0.24.0
 pydantic==2.5.0
 python-dotenv==1.0.0
 click==8.1.7
+
+# Async support
+redis[hiredis]==5.0.1
+aioredis==2.0.1
+
+# Monitoring and performance
+psutil==5.9.6
+
+# Testing and development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-redis==3.0.2
+black==23.11.0
+flake8==6.1.0
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.8
